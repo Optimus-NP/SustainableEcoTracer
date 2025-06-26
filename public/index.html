@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sustainability Analytics Dashboard</title>
+    <meta name="description" content="AI-powered sustainability and environmental impact assessment platform with ESG scoring, carbon footprint analysis, packaging recommendations, and product sustainability assessments." />
+    <style>
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+      }
+      .container {
+        text-align: center;
+        padding: 2rem;
+        max-width: 600px;
+      }
+      .logo {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+      }
+      .title {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        font-weight: 600;
+      }
+      .subtitle {
+        font-size: 1.2rem;
+        margin-bottom: 2rem;
+        opacity: 0.9;
+      }
+      .loading {
+        margin: 2rem 0;
+      }
+      .spinner {
+        border: 3px solid rgba(255,255,255,0.3);
+        border-top: 3px solid white;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto;
+      }
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      .feature {
+        background: rgba(255,255,255,0.1);
+        border-radius: 8px;
+        padding: 1rem;
+        margin: 1rem 0;
+        backdrop-filter: blur(10px);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="logo">🌱</div>
+      <h1 class="title">Sustainability Analytics</h1>
+      <p class="subtitle">AI-powered environmental impact assessment platform</p>
+      
+      <div class="loading">
+        <div class="spinner"></div>
+        <p>Loading dashboard...</p>
+      </div>
+      
+      <div class="feature">
+        <h3>🏭 Carbon Footprint Analysis</h3>
+        <p>Calculate and analyze environmental impact</p>
+      </div>
+      
+      <div class="feature">
+        <h3>📦 Packaging Optimization</h3>
+        <p>ML-powered sustainable packaging recommendations</p>
+      </div>
+      
+      <div class="feature">
+        <h3>🌍 ESG Scoring</h3>
+        <p>Environmental, Social, and Governance assessments</p>
+      </div>
+    </div>
+
+    <script>
+      // Redirect to the main app after a short delay
+      setTimeout(() => {
+        // Try to load the main React app
+        window.location.reload();
+      }, 3000);
+      
+      // Fallback error handling
+      window.addEventListener('error', () => {
+        document.querySelector('.loading').innerHTML = '<p>Initializing application components...</p>';
+      });
+    </script>
+  </body>
+</html>
