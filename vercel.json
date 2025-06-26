@@ -3,11 +3,12 @@
   "outputDirectory": "dist",
   "installCommand": "npm install",
   "framework": null,
-  "functions": {
-    "api/index.js": {
-      "runtime": "nodejs@18.0.0"
+  "builds": [
+    {
+      "src": "api/index.js",
+      "use": "@vercel/node"
     }
-  },
+  ],
   "rewrites": [
     {
       "source": "/api/(.*)",
