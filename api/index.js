@@ -4,32 +4,31 @@ import { users, modelPredictions, batchJobs, modelStatus } from '../shared/schem
 import { eq, desc } from 'drizzle-orm';
 import ws from 'ws';
 
-// Configure Neon for serverless
+// Configure Neon WebSocket
 neonConfig.webSocketConstructor = ws;
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const db = drizzle({ client: pool, schema: { users, modelPredictions, batchJobs, modelStatus } });
 
-// Simple ML Service for predictions
 class MLModelService {
   constructor() {
     this.encoders = {
-      materialType: { 'Plastic': 0, 'Cardboard': 1, 'Glass': 2, 'Metal': 3, 'Composite': 4 },
-      fragility: { 'Low': 0, 'Medium': 1, 'High': 2 },
-      recyclable: { 'Yes': 1, 'No': 0 },
-      transportMode: { 'Road': 0, 'Rail': 1, 'Sea': 2, 'Air': 3 },
-      preferredPackaging: { 'Plastic': 0, 'Cardboard': 1, 'Glass': 2, 'Metal': 3 },
-      category: { 'Electronics': 0, 'Clothing': 1, 'Food': 2, 'Home': 3, 'Books': 4 },
-      material: { 'Plastic': 0, 'Cotton': 1, 'Metal': 2, 'Wood': 3, 'Glass': 4 },
-      brand: { 'EcoGreen': 0, 'SustainaCorp': 1, 'GreenTech': 2, 'EcoFriendly': 3 },
-      sentiment: { 'Positive': 1, 'Negative': 0, 'Neutral': 0.5 }
+      materialType: { Plastic: 0, Cardboard: 1, Glass: 2, Metal: 3, Composite: 4 },
+      fragility: { Low: 0, Medium: 1, High: 2 },
+      recyclable: { Yes: 1, No: 0 },
+      transportMode: { Road: 0, Rail: 1, Sea: 2, Air: 3 },
+      preferredPackaging: { Plastic: 0, Cardboard: 1, Glass: 2, Metal: 3 },
+      category: { Electronics: 0, Clothing: 1, Food: 2, Home: 3, Books: 4 },
+      material: { Plastic: 0, Cotton: 1, Metal: 2, Wood: 3, Glass: 4 },
+      brand: { EcoGreen: 0, SustainaCorp: 1, GreenTech: 2, EcoFriendly: 3 },
+      sentiment: { Positive: 1, Negative: 0, Neutral: 0.5 }
     };
   }
 
   async predictPackaging(input) {
-    const sustainabilityScore = Math.max(20, Math.min(95, 
-      70 + (input.recyclable === 'Yes' ? 15 : -10) + 
-      (input.materialType === 'Cardboard' ? 10 : 0) - 
+    const sustainabilityScore = Math.max(20, Math.min(95,
+      70 + (input.recyclable === 'Yes' ? 15 : -10) +
+      (input.materialType === 'Cardboard' ? 10 : 0) -
       (input.lcaEmission / 10)
     ));
 
@@ -43,11 +42,9 @@ class MLModelService {
   }
 
   async predictCarbonFootprint(input) {
-    const totalFootprint = (input.totalPurchases * 0.5) + 
-                          (input.avgDistance * 0.2) + 
-                          (input.electricity * 0.4) + 
-                          (input.travel * 0.8) + 
-                          (input.serviceUsage * 0.3);
+    const totalFootprint = (input.totalPurchases * 0.5) + (input.avgDistance * 0.2) +
+                           (input.electricity * 0.4) + (input.travel * 0.8) +
+                           (input.serviceUsage * 0.3);
 
     const breakdown = {
       purchases: Math.round(input.totalPurchases * 0.5),
@@ -67,14 +64,14 @@ class MLModelService {
 
   async predictProductRecommendation(input) {
     const sustainabilityScore = Math.max(20, Math.min(95,
-      (100 - input.carbonFootprint) * 0.4 + 
-      (100 - input.waterUsage) * 0.3 + 
+      (100 - input.carbonFootprint) * 0.4 +
+      (100 - input.waterUsage) * 0.3 +
       (100 - input.wasteProduction) * 0.3
     ));
 
     const purchaseLikelihood = Math.max(10, Math.min(90,
-      (input.rating / 5) * 40 + 
-      (input.price <= input.avgPrice ? 30 : 10) + 
+      (input.rating / 5) * 40 +
+      (input.price <= input.avgPrice ? 30 : 10) +
       (sustainabilityScore / 100) * 30
     ));
 
@@ -105,18 +102,18 @@ class MLModelService {
     };
   }
 
-  getPackagingRecommendation(packagingType, fragility) {
+  getPackagingRecommendation(type, fragility) {
     if (fragility === 'High') return 'Use extra protective materials and sustainable cushioning';
-    if (packagingType === 'Cardboard') return 'Excellent choice for sustainability';
+    if (type === 'Cardboard') return 'Excellent choice for sustainability';
     return 'Consider switching to recyclable materials';
   }
 
   getCarbonReductionSuggestions(breakdown) {
-    const suggestions = [];
-    if (breakdown.transport > 50) suggestions.push('Consider electric or hybrid transport');
-    if (breakdown.energy > 100) suggestions.push('Switch to renewable energy sources');
-    if (breakdown.purchases > 200) suggestions.push('Buy local and sustainable products');
-    return suggestions;
+    const s = [];
+    if (breakdown.transport > 50) s.push('Consider electric or hybrid transport');
+    if (breakdown.energy > 100) s.push('Switch to renewable energy sources');
+    if (breakdown.purchases > 200) s.push('Buy local and sustainable products');
+    return s;
   }
 
   getProductRecommendation(score) {
@@ -126,24 +123,22 @@ class MLModelService {
   }
 
   getESGRecommendations(score, sentiment) {
-    const recommendations = [];
-    if (score < 50) recommendations.push('Improve environmental practices');
-    if (sentiment === 'Negative') recommendations.push('Address public perception issues');
-    recommendations.push('Increase transparency in reporting');
-    return recommendations;
+    const recs = [];
+    if (score < 50) recs.push('Improve environmental practices');
+    if (sentiment === 'Negative') recs.push('Address public perception issues');
+    recs.push('Increase transparency in reporting');
+    return recs;
   }
 }
 
-// Storage implementation
 class DatabaseStorage {
   async getAllModelStatuses() {
     const statuses = await db.select().from(modelStatus);
     if (statuses.length === 0) {
-      // Initialize default model statuses
       const defaultModels = ['packaging', 'carbon', 'product', 'esg'];
-      for (const modelType of defaultModels) {
+      for (const type of defaultModels) {
         await db.insert(modelStatus).values({
-          modelType,
+          modelType: type,
           status: 'not_trained',
           accuracy: null,
           lastTrained: null,
@@ -155,33 +150,29 @@ class DatabaseStorage {
     return statuses;
   }
 
-  async getModelStatus(modelType) {
-    const [status] = await db.select().from(modelStatus).where(eq(modelStatus.modelType, modelType));
+  async getModelStatus(type) {
+    const [status] = await db.select().from(modelStatus).where(eq(modelStatus.modelType, type));
     return status || undefined;
   }
 
-  async upsertModelStatus(statusData) {
+  async upsertModelStatus(data) {
     const [status] = await db.insert(modelStatus)
-      .values(statusData)
+      .values(data)
       .onConflictDoUpdate({
         target: modelStatus.modelType,
         set: {
-          status: statusData.status,
-          accuracy: statusData.accuracy,
-          lastTrained: statusData.lastTrained,
-          version: statusData.version
+          status: data.status,
+          accuracy: data.accuracy,
+          lastTrained: data.lastTrained,
+          version: data.version
         }
-      })
-      .returning();
+      }).returning();
     return status;
   }
 
   async createModelPrediction(prediction) {
     const [record] = await db.insert(modelPredictions)
-      .values({
-        ...prediction,
-        confidence: prediction.confidence || null
-      })
+      .values({ ...prediction, confidence: prediction.confidence || null })
       .returning();
     return record;
   }
@@ -202,10 +193,7 @@ class DatabaseStorage {
   }
 
   async updateBatchJob(id, updates) {
-    const [job] = await db.update(batchJobs)
-      .set(updates)
-      .where(eq(batchJobs.id, id))
-      .returning();
+    const [job] = await db.update(batchJobs).set(updates).where(eq(batchJobs.id, id)).returning();
     return job || undefined;
   }
 
@@ -218,52 +206,50 @@ const storage = new DatabaseStorage();
 const mlService = new MLModelService();
 
 export default async function handler(req, res) {
-  // Enable CORS
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
+  if (req.method === 'OPTIONS') return res.status(200).end();
+
+  // Manually parse JSON body for POST, PUT, PATCH
+  if (!['GET', 'OPTIONS'].includes(req.method)) {
+    try {
+      let body = '';
+      for await (const chunk of req) body += chunk;
+      req.body = JSON.parse(body || '{}');
+    } catch (e) {
+      req.body = {};
+    }
   }
 
-  const { url, method } = req;
-  const path = url.replace('/api', '');
+  const path = req.url.replace(/^\/api/, '').split('?')[0].replace(/\/$/, '');
+  const method = req.method;
 
   try {
-    // Model status endpoints
+    // Model Status
     if (path === '/models/status' && method === 'GET') {
       const statuses = await storage.getAllModelStatuses();
-      return res.json(statuses);
+      return res.status(200).json(statuses);
     }
 
     if (path.startsWith('/models/status/') && method === 'GET') {
-      const modelType = path.split('/')[3];
-      const status = await storage.getModelStatus(modelType);
-      if (!status) {
-        return res.status(404).json({ error: 'Model not found' });
-      }
-      return res.json(status);
+      const type = path.split('/')[3];
+      const status = await storage.getModelStatus(type);
+      if (!status) return res.status(404).json({ error: 'Model not found' });
+      return res.status(200).json(status);
     }
 
     if (path.startsWith('/models/train/') && method === 'POST') {
-      const modelType = path.split('/')[3];
-      
-      await storage.upsertModelStatus({
-        modelType,
-        status: 'training',
-        accuracy: null,
-        lastTrained: null,
-        version: '1.0'
-      });
+      const type = path.split('/')[3];
+      await storage.upsertModelStatus({ modelType: type, status: 'training', accuracy: null, lastTrained: null, version: '1.0' });
 
-      // Simulate training delay
+      // Simulate background training
       setTimeout(async () => {
         const accuracy = 75 + Math.random() * 20;
         await storage.upsertModelStatus({
-          modelType,
+          modelType: type,
           status: 'trained',
           accuracy,
           lastTrained: new Date(),
@@ -271,10 +257,10 @@ export default async function handler(req, res) {
         });
       }, 3000);
 
-      return res.json({ message: 'Training started', modelType });
+      return res.status(200).json({ message: 'Training started', modelType: type });
     }
 
-    // Prediction endpoints
+    // Predictions
     if (path === '/predict/packaging' && method === 'POST') {
       const prediction = await mlService.predictPackaging(req.body);
       const record = await storage.createModelPrediction({
@@ -283,7 +269,7 @@ export default async function handler(req, res) {
         prediction,
         confidence: prediction.sustainabilityScore / 100
       });
-      return res.json({ prediction, id: record.id });
+      return res.status(200).json({ prediction, id: record.id });
     }
 
     if (path === '/predict/carbon' && method === 'POST') {
@@ -294,7 +280,7 @@ export default async function handler(req, res) {
         prediction,
         confidence: 0.85
       });
-      return res.json({ prediction, id: record.id });
+      return res.status(200).json({ prediction, id: record.id });
     }
 
     if (path === '/predict/product' && method === 'POST') {
@@ -305,7 +291,7 @@ export default async function handler(req, res) {
         prediction,
         confidence: prediction.purchaseLikelihood / 100
       });
-      return res.json({ prediction, id: record.id });
+      return res.status(200).json({ prediction, id: record.id });
     }
 
     if (path === '/predict/esg' && method === 'POST') {
@@ -316,37 +302,32 @@ export default async function handler(req, res) {
         prediction,
         confidence: prediction.esgScore / 100
       });
-      return res.json({ prediction, id: record.id });
+      return res.status(200).json({ prediction, id: record.id });
     }
 
-    // Batch jobs endpoint
+    // Batch Job
     if (path === '/batch/jobs' && method === 'GET') {
       const jobs = await storage.getBatchJobs();
-      return res.json(jobs);
+      return res.status(200).json(jobs);
     }
 
-    // Batch upload (simplified for Vercel limitations)
     if (path === '/batch/upload' && method === 'POST') {
-      // For Vercel free tier, we'll simulate batch processing
       const { modelType, data } = req.body;
-      
       const job = await storage.createBatchJob({
-        filename: 'uploaded_data.csv',
+        filename: 'uploaded.csv',
         modelType,
         status: 'completed',
         totalRows: Array.isArray(data) ? data.length : 1,
         processedRows: Array.isArray(data) ? data.length : 1,
-        results: { message: 'Batch processing completed successfully' },
-        errorMessage: null,
+        results: { message: 'Simulated batch complete' },
         completedAt: new Date()
       });
-
-      return res.json({ jobId: job.id, totalRows: job.totalRows });
+      return res.status(200).json({ jobId: job.id, totalRows: job.totalRows });
     }
 
-    res.status(404).json({ error: 'Not found' });
-  } catch (error) {
-    console.error('API Error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    return res.status(404).json({ error: 'Not found' });
+  } catch (err) {
+    console.error('API error:', err);
+    return res.status(500).json({ error: 'Internal server error' });
   }
 }
